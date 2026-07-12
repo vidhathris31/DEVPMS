@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: devpms-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - devpms_mongo_data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build: ./server
+    container_name: devpms-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./server/.env
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/devpms
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: devpms-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_PROXY_TARGET=http://backend:4000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  devpms_mongo_data:
